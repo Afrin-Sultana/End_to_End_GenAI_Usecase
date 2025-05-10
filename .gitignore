@@ -1,0 +1,14 @@
+Data
+*.pdf
+*.csv
+*.json
+*.txt
+*.log
+*.zip
+*.tar
+*.gz
+*.tar.gz
+*.tgz
+*.bz2
+*.xz
+.venv
