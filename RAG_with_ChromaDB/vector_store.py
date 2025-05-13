@@ -3,12 +3,15 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.schema import Document
 import os
-from config import CHROMA_PATH, EMBEDDING_MODEL_NAME
+from config import CHROMA_PATH, EMBEDDING_MODEL_NAME, PDF_DIRECTORY
+from data_processing import DataProcessing
 
 class VectorStore:
     def __init__(self):
         self.embedding_function = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
-
+        self.pdf_directory = PDF_DIRECTORY
+        
+    
     def save_to_chroma(self, chunks: list[Document]):
         if os.path.exists(CHROMA_PATH):
             db = Chroma(persist_directory=CHROMA_PATH, embedding_function=self.embedding_function)
@@ -22,7 +25,14 @@ class VectorStore:
         db = Chroma.from_documents(chunks, self.embedding_function, persist_directory=CHROMA_PATH)
         print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}.")
 
-    def query(self, query_text: str, k=3):
+    def queryChroma(self, query_text: str, k=3):
         db = Chroma(persist_directory=CHROMA_PATH, embedding_function=self.embedding_function)
         results = db.similarity_search_with_relevance_scores(query_text, k=k)
         return results
+    
+    def generate_indexing(self):
+        processor = DataProcessing(pdf_directory=self.pdf_directory)
+        documents = processor.load_pdfs()
+        chunks = processor.create_chunks(documents)
+        # vector_store = VectorStore()
+        self.save_to_chroma(chunks)
