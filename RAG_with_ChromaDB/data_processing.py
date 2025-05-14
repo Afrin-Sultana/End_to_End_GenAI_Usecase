@@ -1,4 +1,4 @@
-from langchain_community.document_loaders import PyPDFDirectoryLoader
+from langchain_community.document_loaders import PyPDFDirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 import os
@@ -7,11 +7,18 @@ class DataProcessing:
     # def __init__(self, pdf_directory: str):
     #     self.pdf_directory = pdf_directory
 
-    def load_pdfs(self, pdf_directory) -> list[Document]:
+    def load_pdfs_from_directory(self, pdf_directory) -> list[Document]:
         if not os.path.exists(pdf_directory):
             raise FileNotFoundError(f"Directory does not exist: {pdf_directory}")
         loader = PyPDFDirectoryLoader(pdf_directory)
         return loader.load()
+    
+    def load_single_pdf(self, pdf_path: str) -> list[Document]:
+        if not os.path.exists(pdf_path):
+            raise FileNotFoundError(f"File does not exist: {pdf_path}")
+        loader = PyPDFLoader(pdf_path)
+        return loader.load()
+    
 
     def create_chunks(self, documents: list[Document]) -> list[Document]:
         splitter = RecursiveCharacterTextSplitter(

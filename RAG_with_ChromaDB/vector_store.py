@@ -37,9 +37,14 @@ class VectorStore:
     
     def generate_indexing_for_Chroma(self,file_path: str):
         processor = DataProcessing()
-        documents = processor.load_pdfs(file_path)
+        if os.path.isfile(file_path):
+            documents = processor.load_single_pdf(file_path)
+        elif os.path.isdir(file_path):
+            documents = processor.load_pdfs_from_directory(file_path)
+        else:
+            raise ValueError(f"Invalid file path: {file_path}. It should be a file or a directory.")
+        
         chunks = processor.create_chunks(documents)
-        # vector_store = VectorStore()
         self.save_to_chroma(chunks)
 
     def get_indexed_Sources_from_Chroma(self):
