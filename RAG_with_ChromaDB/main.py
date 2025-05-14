@@ -4,7 +4,7 @@ from retrieval import RAG
 
 if __name__ == "__main__":
     vector_store = VectorStore()
-    vector_store.generate_indexing()
+    vector_store.generate_indexing_for_Chroma()
     rag = RAG()
     query = "What are the main problem associated with Random FOrest?"
     final_response, _ = rag.query_rag(query)

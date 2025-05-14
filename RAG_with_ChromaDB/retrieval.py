@@ -27,7 +27,7 @@ class RAG:
         prompt = prompt_template.format(context=context_text, question=query_text)
 
         model = ChatOpenAI(model="gpt-4o", temperature=0, openai_api_key=api_key)
-        messages = [SystemMessage(content="You are a helpful assistant."), HumanMessage(content=prompt)]
+        messages = [SystemMessage(content="You are a helpful assistant and you help to give answer from a given context."), HumanMessage(content=prompt)]
         response = model.invoke(messages)
 
         return f"Response: {response}\nSources: {sources}", response

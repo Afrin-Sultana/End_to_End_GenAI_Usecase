@@ -5,6 +5,7 @@ from langchain.schema import Document
 import os
 from config import CHROMA_PATH, EMBEDDING_MODEL_NAME, PDF_DIRECTORY
 from data_processing import DataProcessing
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 class VectorStore:
     def __init__(self):
@@ -15,24 +16,48 @@ class VectorStore:
     def save_to_chroma(self, chunks: list[Document]):
         if os.path.exists(CHROMA_PATH):
             db = Chroma(persist_directory=CHROMA_PATH, embedding_function=self.embedding_function)
-            if db._collection.count() > 0:
-                print("Chroma DB already populated.")
+            existing_sources = self.get_indexed_Sources_from_Chroma()
+            print(f"Existing sources in Chroma DB: {existing_sources}")
+            new_chunks = [chunk for chunk in chunks if chunk.metadata.get("source") not in existing_sources]
+            if not new_chunks:
+                print("Chroma DB already contains all documents. Skipping ingestion.")
                 return
-            print("Chroma DB exists but is empty. Populating.")
+            db.add_documents(new_chunks)
+            print(f"Added {len(new_chunks)} new chunks to {CHROMA_PATH}.")
+
+            # if db._collection.count() > 0:
+            #     print("Chroma DB already populated.")
+            #     return
+            # print("Chroma DB exists but is empty. Populating.")
         else:
             print("Chroma DB does not exist. Creating new one.")
 
-        db = Chroma.from_documents(chunks, self.embedding_function, persist_directory=CHROMA_PATH)
-        print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}.")
+        # db = Chroma.from_documents(chunks, self.embedding_function, persist_directory=CHROMA_PATH)
+        # print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}.")
 
     def queryChroma(self, query_text: str, k=3):
         db = Chroma(persist_directory=CHROMA_PATH, embedding_function=self.embedding_function)
         results = db.similarity_search_with_relevance_scores(query_text, k=k)
         return results
     
-    def generate_indexing(self):
+    def generate_indexing_for_Chroma(self):
         processor = DataProcessing(pdf_directory=self.pdf_directory)
         documents = processor.load_pdfs()
         chunks = processor.create_chunks(documents)
         # vector_store = VectorStore()
         self.save_to_chroma(chunks)
+
+    def get_indexed_Sources_from_Chroma(self):
+        db = Chroma(persist_directory=CHROMA_PATH, embedding_function=self.embedding_function)
+        collection= db._collection
+        all_metadata= collection.get(include=["metadatas"])["metadatas"]
+        return set(m.get("source") for m in all_metadata if m.get("source"))
+        # return any(os.path.basename(m.get("source",""))==file_name for m in all_metadata)
+
+    def is_file_name_indexed_inChroma(self, file_name: str):
+        db = Chroma(persist_directory=CHROMA_PATH, embedding_function=self.embedding_function)
+        collection= db._collection
+        all_metadata= collection.get(include=["metadatas"])["metadatas"]
+        # return set(m.get("source") for m in all_metadata if m.get("source"))
+        return any(os.path.basename(m.get("source",""))==file_name for m in all_metadata)
+        
