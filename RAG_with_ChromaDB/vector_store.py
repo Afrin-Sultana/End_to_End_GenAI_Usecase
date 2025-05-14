@@ -3,14 +3,13 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.schema import Document
 import os
-from config import CHROMA_PATH, EMBEDDING_MODEL_NAME, PDF_DIRECTORY
+from config import CHROMA_PATH, EMBEDDING_MODEL_NAME
 from data_processing import DataProcessing
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 class VectorStore:
     def __init__(self):
         self.embedding_function = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
-        self.pdf_directory = PDF_DIRECTORY
         
     
     def save_to_chroma(self, chunks: list[Document]):
@@ -25,24 +24,20 @@ class VectorStore:
             db.add_documents(new_chunks)
             print(f"Added {len(new_chunks)} new chunks to {CHROMA_PATH}.")
 
-            # if db._collection.count() > 0:
-            #     print("Chroma DB already populated.")
-            #     return
-            # print("Chroma DB exists but is empty. Populating.")
+
         else:
             print("Chroma DB does not exist. Creating new one.")
 
-        # db = Chroma.from_documents(chunks, self.embedding_function, persist_directory=CHROMA_PATH)
-        # print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}.")
+        
 
     def queryChroma(self, query_text: str, k=3):
         db = Chroma(persist_directory=CHROMA_PATH, embedding_function=self.embedding_function)
         results = db.similarity_search_with_relevance_scores(query_text, k=k)
         return results
     
-    def generate_indexing_for_Chroma(self):
-        processor = DataProcessing(pdf_directory=self.pdf_directory)
-        documents = processor.load_pdfs()
+    def generate_indexing_for_Chroma(self,file_path: str):
+        processor = DataProcessing()
+        documents = processor.load_pdfs(file_path)
         chunks = processor.create_chunks(documents)
         # vector_store = VectorStore()
         self.save_to_chroma(chunks)
