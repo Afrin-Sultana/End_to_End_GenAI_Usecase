@@ -12,10 +12,13 @@ vector_store = VectorStore()
 def read_root():
     return {"Welcome to the Q&A RAG"}
 
-@app.get("/query")
+@app.post("/query")
 def query_rag(query_text: str):
-    response, _ = rag.query_rag(query_text)
-    return {"Response": response}
+    # response, _ = rag.query_rag(query_text)
+    content, sources = rag.query_rag(query_text)
+    # return {"Response": response.content}
+    return {"content": content, "sources": sources}
+
 
 @app.post("/upload-data")
 def upload_data(file: UploadFile= File(...)):
@@ -36,7 +39,7 @@ def upload_data(file: UploadFile= File(...)):
 
     # Generate the index for the uploaded file
     vector_store.generate_indexing_for_Chroma(temp_file_path)
-
+    os.remove(temp_file_path)
     return {"message": f"{file.filename} has been indexed in Chroma."}
 
     

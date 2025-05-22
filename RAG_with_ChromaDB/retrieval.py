@@ -30,4 +30,4 @@ class RAG:
         messages = [SystemMessage(content="You are a helpful assistant and you help to give answer from a given context."), HumanMessage(content=prompt)]
         response = model.invoke(messages)
 
-        return f"Response: {response}\nSources: {sources}", response
+        return response.content, sources
