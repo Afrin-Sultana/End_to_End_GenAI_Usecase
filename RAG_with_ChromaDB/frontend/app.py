@@ -1,8 +1,11 @@
 import streamlit as st
 import requests
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 
-API_URL = "http://localhost:8000"  # URL of the FastAPI server
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 st.title("  Q&A Retrieval-Augmented Generation (RAG) with ChromaDB")
 
